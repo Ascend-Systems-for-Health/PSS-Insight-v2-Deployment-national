@@ -132,7 +132,9 @@ echo "DHIS2 core server is running."
 
 echo "Adding custom CSS..."
 
-curl -o ./scripts/style.css https://raw.githubusercontent.com/IntelliSOFT-Consulting/PSS-DHIS2-login/main/style.css
+# Vendored locally to avoid a fragile deploy-time dependency on raw.githubusercontent.com.
+# Original source: https://raw.githubusercontent.com/IntelliSOFT-Consulting/PSS-DHIS2-login/main/style.css
+cp ./config/login-style.css ./scripts/style.css
 
 curl -X POST -H "Content-Type: text/css" -d @./scripts/style.css "$DHIS2_URL/api/38/files/style"
 
