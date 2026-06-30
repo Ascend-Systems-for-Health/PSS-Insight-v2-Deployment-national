@@ -58,7 +58,9 @@ services:
       - JAVA_VERSION=11.0.16
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-localdev}
     hostname: a2598f7830a6
-    image: intellisoftdev/pss_ws_national:latest
+    # Derivative build: adds the Indicator Dictionary local Hub-fallback (built
+    # reproducibly from PSS-Insight-v2-WebServices/Dockerfile.national-fallback).
+    image: intellisoftdev/pss_ws_national:fallback
     build:
       context: .
       dockerfile: Dockerfile-dhis_pss_national
@@ -70,6 +72,11 @@ services:
     # network_mode: bridge
     ports:
       - 7001:7001/tcp
+      # The National (Configuration) DHIS2 app is built to call the national web
+      # service at host port 8080 (REACT_APP_NATIONAL_URL=http://<host>:8080).
+      # Expose the service there so the Indicator Dictionary (and other national
+      # backend features) are reachable from the browser. Container stays on 7001.
+      - 8080:7001/tcp
     working_dir: /national_javabackend
     depends_on:
       - pss_ws_national_db
@@ -129,6 +136,12 @@ services:
       - PKG_RELEASE=1
       - NJS_VERSION=0.7.12
       - REACT_APP_API_URL=https://local.pssinsight.org
+    # The baked-in nginx config proxies /api to https://local.pssinsight.org (the original
+    # IntelliSOFT hosted domain). nginx resolves that host at startup and crash-loops when it
+    # cannot. Map it so nginx boots and serves the static survey form. (The /api survey-submission
+    # path targets the original hosted backend and is out of scope for this AS-IS local demo.)
+    extra_hosts:
+      - "local.pssinsight.org:127.0.0.1"
     hostname: 9ce9118d34a9
     image: intellisoftdev/pss-survey
     build:
